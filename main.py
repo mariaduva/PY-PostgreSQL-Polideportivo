@@ -108,34 +108,58 @@ class ClientManagementSystem:
             if not client_id.strip() or not sport_id.strip():
                 raise ValueError("El DNI del cliente y el deporte son obligatorios.")
             
-            self.cur.execute(f"SELECT * FROM clients WHERE dni = '{client_id}'")
+            query = "SELECT * FROM clients WHERE dni = %s"
+            self.cur.execute(query, (client_id,))
             client = self.cur.fetchone()
-            if not client:
-                raise ValueError(f"No existe un cliente con el DNI {client_id}.")
             
-            self.cur.execute(f"SELECT * FROM enrollment WHERE client_id = '{client_id}' AND sport_id = {sport_id}")
-            enrollment = self.cur.fetchone()
-            if enrollment:
-                raise ValueError(f"El cliente con el dni {client_dni} ya está matriculado en {sport_id}.")
+            query = "SELECT * FROM sports WHERE sport_id = %s"
+            self.cur.execute(query, (sport_id,))
+            sport = self.cur.fetchone()
             
-            self.cur.execute(f"INSERT INTO matriculas (cliente_id, sport_id) VALUES ('{client_dni}', {sport_id})")
-            self.conx.commit()
-            print(f"El cliente con el DNI {client_dni} ha sido matriculado en {sport}.")
+            if not client or not sport:
+                raise ValueError("El cliente o el deporte no existen.")
+            else:
+                query = "SELECT * FROM enrollment WHERE client_id = %s AND sport_id = %s"
+                self.cur.execute(query, (client_id, sport_id))
+                
+                enrollment = self.cur.fetchone()
+                if enrollment:
+                    raise ValueError(f"El cliente con el dni {client_id} ya está matriculado en {sport_id}.")
+                else:
+                    query = "SELECT max(enrollment_id) FROM enrollment"
+                    self.cur.execute(query)
+                    result = self.cur.fetchone()
+                    if result and result[0]:
+                        last_enrollment_id = result[0]
+                    else:
+                        last_enrollment_id = 0
+                    
+                    query = "INSERT INTO enrollment (enrollment_id, client_id, sport_id) VALUES (%s, %s, %s)"
+                    self.cur.execute(query, (last_enrollment_id + 1, client_id, sport_id))
+                    self.conx.commit()
+                    print(f"El cliente con el DNI {client_id} ha sido matriculado en {sport_id}.")
     	except Exception as e:
             print(f"Error: {e}")
 
     def disenrollClient(self):
         try:
             print("Desmatricular cliente")
-
-            client_dni = input("Introduce el DNI del cliente: ")
-
-            sport_nom = input("Introduce el nombre del deporte: ")
-
-            self.cur.execute("DELETE FROM matriculas WHERE client_dni = %s AND sport_nom = %s", (client_dni, sport_nom))
-
+            client_id = input("Introduce el DNI del cliente: ")
+            sport_name = input("Introduce el nombre del deporte: ")
+            
+            query = "SELECT * FROM sports WHERE sport_name = %s"
+            self.cur.execute(query, (sport_name,))
+            result = self.cur.fetchall()
+            if result:
+                sport_id = result[0][0]
+            else:
+                print("No se ha encontrado el deporte indicado.")
+                
+            query = "DELETE FROM enrollment WHERE client_id = %s AND sport_id = %s"
+            self.cur.execute(query, (client_id, sport_id))
             self.conx.commit()
-            print(f"El cliente ha sido desmatriculado de {sport_nom}.")
+            
+            print(f"El cliente ha sido desmatriculado de {sport_name}.")
         except Exception as e:
             print("Ha ocurrido un error al desmatricular el cliente:", e)
             self.conx.rollback()
@@ -143,15 +167,14 @@ class ClientManagementSystem:
     def showSports(self):
         try:
             print("Deportes de un cliente")
-
-            client_id = input("Introduce el ID del cliente: ")
-
-            self.cur.execute("SELECT s.sport_id, s.name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_id,))
-
+            client_dni = input("Introduce el dni del cliente: ")
+            self.cur.execute("SELECT s.sport_id, s.sport_name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_dni,))
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
             for sport in sports:
-                print("ID:", sport[0], "Nombre:", sport[1])
+                print("|   ID   |   Nombre   |")
+                print(sport[0], sport[1])
+                print("-" * 20)
         except Exception as e:
             print("Ha ocurrido un error al obtener los deportes del cliente:", e)
             self.conx.rollback()
@@ -172,12 +195,20 @@ class ClientManagementSystem:
         else:
             print(f"Table '{table_name}' already exists.")
             
+    def addExampleData(self):
+        query = "INSERT INTO sports (sport_id, sport_name, sport_price) VALUES (101, 'Futbol', 50.00), (102, 'Baloncesto', 40.00), (103, 'Tenis', 60.00)"
+        self.cur.execute(query)
+        self.conx.commit()
+            
     def run(self):
         self.conx = connectdb()
         self.cur = self.conx.cursor()
+        
+        #Check if tables exist, if not, create them. Also add some example data.
         self.checkTable("clients", "dni VARCHAR(9) PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), birthdate DATE, phone VARCHAR(9)")
         self.checkTable("sports", "sport_id SERIAL PRIMARY KEY, sport_name VARCHAR(50), sport_price NUMERIC(5,2)")
         self.checkTable("enrollment", "enrollment_id SERIAL PRIMARY KEY, client_id VARCHAR(9), sport_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(dni), FOREIGN KEY (sport_id) REFERENCES sports(sport_id)")
+        #self.addExampleData()
         
         while True:
             option = self.menu()
