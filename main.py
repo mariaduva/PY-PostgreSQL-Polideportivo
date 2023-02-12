@@ -102,7 +102,7 @@ class ClientManagementSystem:
             self.cur.execute(f"INSERT INTO matriculas (cliente_id, deporte) VALUES ({client_dni}, '{sport}')")
             self.conx.commit()
             print(f"El cliente con el DNI {client_dni} ha sido matriculado en {sport}.")
-        except Exception as e:
+    	except Exception as e:
             print(f"Error: {e}")
 
     def disenrollClient(self):
