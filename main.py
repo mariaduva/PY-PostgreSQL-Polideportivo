@@ -125,19 +125,17 @@ class ClientManagementSystem:
         try:
             print("Deportes de un cliente")
 
-            client_dni = input("Introduce el DNI del cliente: ")
+            client_id = input("Introduce el ID del cliente: ")
 
-			#TODO: Seleccionar los deportes de un cliente
-            self.cur.execute("SELECT s.sport_nom FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_dni,))
+            self.cur.execute("SELECT s.sport_id, s.name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_id,))
 
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
             for sport in sports:
-                print("Nombre:", sport[0])
+                print("ID:", sport[0], "Nombre:", sport[1])
         except Exception as e:
             print("Ha ocurrido un error al obtener los deportes del cliente:", e)
             self.conx.rollback()
-        pass
 
     def closseProgram(self):
         print("Saliendo del programa...")
