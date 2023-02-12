@@ -172,8 +172,9 @@ class ClientManagementSystem:
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
             for sport in sports:
-                print("|   ID   |   Nombre   |")
-                print(sport[0], sport[1])
+                print("|   ID   |      Nombre     |")
+                print("-" * 20)
+                print(f"|   {sport[0]}   |   {sport[1]}   |")
                 print("-" * 20)
         except Exception as e:
             print("Ha ocurrido un error al obtener los deportes del cliente:", e)
