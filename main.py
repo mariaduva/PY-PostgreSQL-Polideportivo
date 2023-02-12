@@ -46,10 +46,19 @@ class ClientManagementSystem:
     def deleteClient(self):
         try:
             dni = input("Introduce el DNI del cliente a eliminar: ")
-            query = "DELETE FROM clients WHERE dni = %s"
-            self.cur.execute(query, (dni))
-            self.conx.commit()
-            print(f"El cliente con DNI {dni} ha sido eliminado.")
+            if dni:
+                query = "SELECT * FROM clients WHERE dni = %s"
+                self.cur.execute(query, (dni,))
+                result = self.cur.fetchone()
+                if result:
+                    query = "DELETE FROM clients WHERE dni = %s"
+                    self.cur.execute(query, (dni,))
+                    self.conx.commit()
+                    print(f"El cliente con DNI {dni} ha sido eliminado.")
+                else:
+                    print("No se encontró un cliente con ese DNI.")
+            else:
+                raise ValueError("El DNI es obligatorio.")
         except Exception as e:
             self.conx.rollback()
             print(f"Error al eliminar el cliente: {str(e)}")
@@ -59,10 +68,11 @@ class ClientManagementSystem:
             dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ")
             if dni:
                 query = "SELECT * FROM clients WHERE dni = %s"
-                self.cur.execute(query, (dni))
+                self.cur.execute(query, (dni,))
                 result = self.cur.fetchone()
                 if result:
                     print("Datos del cliente:")
+                    print("-" * 20)
                     print(f"DNI: {result[0]}")
                     print(f"Nombre: {result[1]}")
                     print(f"Apellido: {result[2]}")
@@ -76,6 +86,7 @@ class ClientManagementSystem:
                 results = self.cur.fetchall()
                 if results:
                     print("Datos de los clientes:")
+                    print("-" * 20)
                     for result in results:
                         print(f"DNI: {result[0]}")
                         print(f"Nombre: {result[1]}")
@@ -161,12 +172,6 @@ class ClientManagementSystem:
         else:
             print(f"Table '{table_name}' already exists.")
             
-    '''def check_client_exists(self, dni):
-        query = "SELECT * FROM clients WHERE dni = %s"
-        self.cur.execute(query, (dni))
-        result = self.cursor.fetchone()
-        return result is not None'''
-
     def run(self):
         self.conx = connectdb()
         self.cur = self.conx.cursor()
