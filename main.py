@@ -16,42 +16,50 @@ class ClientManagementSystem:
     def menu(self):
         print("Menú de opciones")
         [print(i) for i in self.menu_options]
-        opcion = validateNaturalNumber("Introduce la opción del menú: ", len(self.menu_options))
-        return opcion
+        option = validateNaturalNumber("Introduce la opción del menú: ", len(self.menu_options))
+        return option
 
     def addNewClient(self):
         try:
-            print("Nuevo cliente: ")
-            first_name = input("Introduce el nombre: ")
-            last_name = input("Introduce el apellido: ")
-            dni = input("Introduce el DNI: ")
-            birthdate = input("Introduce la fecha de nacimiento (YYYY-MM-DD): ")
-            phone = input("Introduce el teléfono: ")
-            query = "INSERT INTO clients (name, last_name, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
-            self.cur.execute(query, (first_name, last_name, dni, birthdate, phone))
-            self.conx.commit()
-            print(f"El cliente {first_name} {last_name} con DNI {dni} ha sido agregado.")
+            dni = input("Introduce el DNI del cliente: ")
+            if dni:
+                query = "SELECT * FROM clients WHERE dni = %s"
+                self.cur.execute(query, (dni,))
+                result = self.cur.fetchone()
+                if result:
+                    raise ValueError(f"Ya existe un cliente con el DNI {dni}.")
+                else:
+                    name = input("Introduce el nombre: ")
+                    surname = input("Introduce el apellido: ")
+                    birthdate = input("Introduce la fecha de nacimiento (YYYY-MM-DD): ")
+                    phone = input("Introduce el teléfono: ")
+                    query = "INSERT INTO clients (dni, name, surname, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
+                    self.cur.execute(query, (dni, name, surname, birthdate, phone))
+                    self.conx.commit()
+                    print(f"El cliente {name} {surname} con DNI {dni} ha sido agregado.")
+            else:
+                raise ValueError("El DNI es obligatorio.")
         except Exception as e:
             self.conx.rollback()
             print(f"Error al agregar el cliente: {str(e)}")
 
     def deleteClient(self):
         try:
-            client_dni = input("Introduce el DNI del cliente a eliminar: ")
+            dni = input("Introduce el DNI del cliente a eliminar: ")
             query = "DELETE FROM clients WHERE dni = %s"
-            self.cur.execute(query, (client_dni,))
+            self.cur.execute(query, (dni))
             self.conx.commit()
-            print(f"El cliente con ID {client_dni} ha sido eliminado.")
+            print(f"El cliente con DNI {dni} ha sido eliminado.")
         except Exception as e:
             self.conx.rollback()
             print(f"Error al eliminar el cliente: {str(e)}")
 
     def showClient(self):
         try:
-            client_dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ")
-            if client_dni:
-                query = "SELECT * FROM clients WHERE id = %s"
-                self.cur.execute(query, (client_dni,))
+            dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ")
+            if dni:
+                query = "SELECT * FROM clients WHERE dni = %s"
+                self.cur.execute(query, (dni))
                 result = self.cur.fetchone()
                 if result:
                     print("Datos del cliente:")
@@ -83,23 +91,23 @@ class ClientManagementSystem:
     def enrollClient(self):
     	try:
             print("Matricular a un cliente en un deporte: ")
-            client_dni = input("Introduce el DNI del cliente: ")
-            sport = input("Introduce el deporte en el que quieres matricular al cliente: ")
+            client_id = input("Introduce el DNI del cliente: ")
+            sport_id = input("Introduce el ID del deporte en el que quieres matricular al cliente: ")
             
-            if not client_dni.strip() or not sport.strip():
+            if not client_id.strip() or not sport_id.strip():
                 raise ValueError("El DNI del cliente y el deporte son obligatorios.")
             
-            self.cur.execute(f"SELECT * FROM clientes WHERE dni = {client_dni}")
+            self.cur.execute(f"SELECT * FROM clients WHERE dni = '{client_id}'")
             client = self.cur.fetchone()
             if not client:
-                raise ValueError(f"No existe un cliente con el DNI {client_dni}.")
+                raise ValueError(f"No existe un cliente con el DNI {client_id}.")
             
-            self.cur.execute(f"SELECT * FROM matriculas WHERE cliente_id = {client_dni} AND deporte = '{sport}'")
+            self.cur.execute(f"SELECT * FROM enrollment WHERE client_id = '{client_id}' AND sport_id = {sport_id}")
             enrollment = self.cur.fetchone()
             if enrollment:
-                raise ValueError(f"El cliente con el ID {client_dni} ya está matriculado en {sport}.")
+                raise ValueError(f"El cliente con el dni {client_dni} ya está matriculado en {sport_id}.")
             
-            self.cur.execute(f"INSERT INTO matriculas (cliente_id, deporte) VALUES ({client_dni}, '{sport}')")
+            self.cur.execute(f"INSERT INTO matriculas (cliente_id, sport_id) VALUES ('{client_dni}', {sport_id})")
             self.conx.commit()
             print(f"El cliente con el DNI {client_dni} ha sido matriculado en {sport}.")
     	except Exception as e:
@@ -152,6 +160,12 @@ class ClientManagementSystem:
             print(f"Table '{table_name}' created successfully.")
         else:
             print(f"Table '{table_name}' already exists.")
+            
+    '''def check_client_exists(self, dni):
+        query = "SELECT * FROM clients WHERE dni = %s"
+        self.cur.execute(query, (dni))
+        result = self.cursor.fetchone()
+        return result is not None'''
 
     def run(self):
         self.conx = connectdb()
@@ -161,11 +175,10 @@ class ClientManagementSystem:
         self.checkTable("enrollment", "enrollment_id SERIAL PRIMARY KEY, client_id VARCHAR(9), sport_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(dni), FOREIGN KEY (sport_id) REFERENCES sports(sport_id)")
         
         while True:
-            opcion = self.menu()
-            print("Opción elegida:", opcion)
+            option = self.menu()
             self.methods = [self.addNewClient, self.deleteClient, self.showClient, self.enrollClient, self.disenrollClient, self.showSports, self.closseProgram]
-            self.methods[opcion-1]()
-            if opcion == 7:
+            self.methods[option-1]()
+            if option == 7:
                 break
         closedb(self.conx)
 
