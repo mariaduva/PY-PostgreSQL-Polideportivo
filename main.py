@@ -1,6 +1,6 @@
 import psycopg2
 from config import connectdb, closedb
-from inputValidation import validateNaturalNumber
+from inputValidation import validateNaturalNumber, validateDni, validatePhoneNumber, validateIsDigit
 
 class ClientManagementSystem:
     
@@ -20,8 +20,9 @@ class ClientManagementSystem:
         return option
 
     def addNewClient(self):
+        print("Dar de alta un cliente con sus datos personales")
         try:
-            dni = input("Introduce el DNI del cliente: ")
+            dni = validateDni("Introduce el DNI del cliente: ", False)
             if dni:
                 query = "SELECT * FROM clients WHERE dni = %s"
                 self.cur.execute(query, (dni,))
@@ -32,7 +33,7 @@ class ClientManagementSystem:
                     name = input("Introduce el nombre: ")
                     surname = input("Introduce el apellido: ")
                     birthdate = input("Introduce la fecha de nacimiento (YYYY-MM-DD): ")
-                    phone = input("Introduce el teléfono: ")
+                    phone = validatePhoneNumber("Introduce un número de telefono")
                     query = "INSERT INTO clients (dni, name, surname, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
                     self.cur.execute(query, (dni, name, surname, birthdate, phone))
                     self.conx.commit()
@@ -44,8 +45,9 @@ class ClientManagementSystem:
             print(f"Error al agregar el cliente: {str(e)}")
 
     def deleteClient(self):
+        print("Dar de baja un cliente")
         try:
-            dni = input("Introduce el DNI del cliente a eliminar: ")
+            dni = validateDni("Introduce el DNI del cliente a eliminar: ", False)
             if dni:
                 query = "SELECT * FROM clients WHERE dni = %s"
                 self.cur.execute(query, (dni,))
@@ -65,7 +67,7 @@ class ClientManagementSystem:
 
     def showClient(self):
         try:
-            dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ")
+            dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ", True)
             if dni:
                 query = "SELECT * FROM clients WHERE dni = %s"
                 self.cur.execute(query, (dni,))
@@ -102,11 +104,8 @@ class ClientManagementSystem:
     def enrollClient(self):
     	try:
             print("Matricular a un cliente en un deporte: ")
-            client_id = input("Introduce el DNI del cliente: ")
-            sport_id = input("Introduce el ID del deporte en el que quieres matricular al cliente: ")
-            
-            if not client_id.strip() or not sport_id.strip():
-                raise ValueError("El DNI del cliente y el deporte son obligatorios.")
+            client_id = validateDni("Introduce el DNI del cliente: ", False)
+            sport_id = validateIsDigit("Introduce el ID del deporte en el que quieres matricular al cliente: ")
             
             query = "SELECT * FROM clients WHERE dni = %s"
             self.cur.execute(query, (client_id,))
@@ -144,7 +143,7 @@ class ClientManagementSystem:
     def disenrollClient(self):
         try:
             print("Desmatricular cliente")
-            client_id = input("Introduce el DNI del cliente: ")
+            client_id = validateDni("Introduce el DNI del cliente: ", False)
             sport_name = input("Introduce el nombre del deporte: ")
             
             query = "SELECT * FROM sports WHERE sport_name = %s"
@@ -167,7 +166,7 @@ class ClientManagementSystem:
     def showSports(self):
         try:
             print("Deportes de un cliente")
-            client_dni = input("Introduce el dni del cliente: ")
+            client_dni = validateDni("Introduce el DNI del cliente: ", False)
             self.cur.execute("SELECT s.sport_id, s.sport_name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_dni,))
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
