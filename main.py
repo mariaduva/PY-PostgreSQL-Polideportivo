@@ -33,7 +33,7 @@ class ClientManagementSystem:
                     name = input("Introduce el nombre: ")
                     surname = input("Introduce el apellido: ")
                     birthdate = input("Introduce la fecha de nacimiento (YYYY-MM-DD): ")
-                    phone = validatePhoneNumber("Introduce un número de telefono")
+                    phone = validatePhoneNumber("Introduce un número de telefono: ")
                     query = "INSERT INTO clients (dni, name, surname, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
                     self.cur.execute(query, (dni, name, surname, birthdate, phone))
                     self.conx.commit()
@@ -67,7 +67,7 @@ class ClientManagementSystem:
 
     def showClient(self):
         try:
-            dni = input("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ", True)
+            dni = validateDni("Introduce el DNI del cliente (dejar en blanco para ver todos los clientes): ", True)
             if dni:
                 query = "SELECT * FROM clients WHERE dni = %s"
                 self.cur.execute(query, (dni,))
@@ -170,8 +170,8 @@ class ClientManagementSystem:
             self.cur.execute("SELECT s.sport_id, s.sport_name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_dni,))
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
+            print("|   ID   |      Nombre     |")
             for sport in sports:
-                print("|   ID   |      Nombre     |")
                 print("-" * 20)
                 print(f"|   {sport[0]}   |   {sport[1]}   |")
                 print("-" * 20)
@@ -205,9 +205,9 @@ class ClientManagementSystem:
         self.cur = self.conx.cursor()
         
         #Check if tables exist, if not, create them. Also add some example data.
-        self.checkTable("clients", "dni VARCHAR(9) PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), birthdate DATE, phone VARCHAR(9)")
+        self.checkTable("clients", "dni text PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), birthdate DATE, phone VARCHAR(9)")
         self.checkTable("sports", "sport_id SERIAL PRIMARY KEY, sport_name VARCHAR(50), sport_price NUMERIC(5,2)")
-        self.checkTable("enrollment", "enrollment_id SERIAL PRIMARY KEY, client_id VARCHAR(9), sport_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(dni), FOREIGN KEY (sport_id) REFERENCES sports(sport_id)")
+        self.checkTable("enrollment", "enrollment_id SERIAL PRIMARY KEY, client_id text, sport_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(dni), FOREIGN KEY (sport_id) REFERENCES sports(sport_id)")
         #self.addExampleData()
         
         while True:

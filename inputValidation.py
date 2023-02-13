@@ -14,7 +14,7 @@ def validateNaturalNumber(str, max):
 			print("El valor introducido no es un número.")
    
 def validateDni(str, blank):
-    patern = '^[0-9]{8,8}[A-Za-z]$'
+    pattern = r"^[0-9]{8,8}[A-Za-z]$"
     goodinput = False
     while not goodinput:
         try:
@@ -29,7 +29,7 @@ def validateDni(str, blank):
             print("Errror")
             
 def validatePhoneNumber(str):
-	pattern = '(\+34|0034|34)?[ -]*(6|7)[ -]*([0-9][ -]*){8}'
+	pattern = r"(\+34|0034|34)?[ -]*(6|7)[ -]*([0-9][ -]*){8}"
 	goodinput = False
 	while not goodinput:
 		try:
