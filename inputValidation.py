@@ -41,7 +41,7 @@ def validatePhoneNumber(str):
 			else:
 				print("El número de teléfono introducido no es válido.")
 		except ValueError:
-        	print("Error")
+			print("Error")
    
 def validateIsDigit(str):
 	goodinput = False
