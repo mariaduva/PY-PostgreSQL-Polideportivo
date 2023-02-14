@@ -170,7 +170,7 @@ class ClientManagementSystem:
             self.cur.execute("SELECT s.sport_id, s.sport_name FROM sports s JOIN enrollment e ON s.sport_id = e.sport_id WHERE e.client_id = %s", (client_dni,))
             sports = self.cur.fetchall()
             print("El cliente está matriculado en los siguientes deportes:")
-            print("|   ID   |      Nombre     |")
+            print("|   ID   |      Nombre    	 |")
             for sport in sports:
                 print("-" * 20)
                 print(f"|   {sport[0]}   |   {sport[1]}   |")
