@@ -11,7 +11,7 @@ class Client:
 
     def __str__(self):
         return (
-            "Nombre: " + self.name + self.surname +  "\n" +
+            "Nombre: " + self.name + " " + self.surname +  "\n" +
             "DNI: " + self.dni + "\n" +
             "Fecha de nacimiento: " + self.birthdate + "\n" +
             "Teléfono: " + self.phone

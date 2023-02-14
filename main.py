@@ -31,18 +31,21 @@ class ClientManagementSystem:
                 if result:
                     raise ValueError(f"Ya existe un cliente con el DNI {dni}.")
                 else:
-                    name = input("Introduce el nombre: ")
-                    surname = input("Introduce el apellido: ")
-                    birthdate = input("Introduce la fecha de nacimiento (YYYY-MM-DD): ")
-                    phone = validatePhoneNumber("Introduce un número de telefono: ")
+                    datos = (
+                        dni,
+                        input("Introduce el nombre: "),
+                        input("Introduce el apellido: "),
+                        input("Introduce la fecha de nacimiento (YYYY-MM-DD): "),
+                        validatePhoneNumber("Introduce un número de telefono: ")
+                    )
                     query = "INSERT INTO clients (dni, name, surname, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
-                    self.cur.execute(query, (dni, name, surname, birthdate, phone))
+                    self.cur.execute(query, datos)
                     self.conx.commit()
-                    cliente = Client(dni, name, surname, birthdate, phone)
-                    print("Cliente añadido correctamente /n Datos del cliente:")
+                    cliente = Client(*datos)
+                    print("Cliente añadido correctamente \nDatos del cliente:")
                     print(cliente)
             else:
-                raise ValueError("El DNI es obligatorio.")
+                raise ValueError("Error al inrtoducir el DNI.")
         except Exception as e:
             self.conx.rollback()
             print(f"Error al agregar el cliente: {str(e)}")
