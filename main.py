@@ -1,6 +1,7 @@
 import psycopg2
 from config import connectdb, closedb
 from inputValidation import validateNaturalNumber, validateDni, validatePhoneNumber, validateIsDigit
+from client import Client
 
 class ClientManagementSystem:
     
@@ -37,7 +38,9 @@ class ClientManagementSystem:
                     query = "INSERT INTO clients (dni, name, surname, birthdate, phone) VALUES (%s, %s, %s, %s, %s)"
                     self.cur.execute(query, (dni, name, surname, birthdate, phone))
                     self.conx.commit()
-                    print(f"El cliente {name} {surname} con DNI {dni} ha sido agregado.")
+                    cliente = Client(dni, name, surname, birthdate, phone)
+                    print("Cliente añadido correctamente /n Datos del cliente:")
+                    print(cliente)
             else:
                 raise ValueError("El DNI es obligatorio.")
         except Exception as e:
