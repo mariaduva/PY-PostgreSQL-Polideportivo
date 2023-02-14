@@ -5,8 +5,6 @@ class Sport:
 
     def mostrar_nombre(self):
         return (
-                    "Nombre del deporte: " + self.name + self.surname +  "\n" +
-                    "DNI: " + self.dni + "\n" +
-                    "Fecha de nacimiento: " + self.fecha_nacimiento + "\n" +
-                    "Teléfono: " + self.telefono
+                    "Nombre del deporte: " + self.name + "\n" +
+                    "Precio: " + self.price +  "\n" 
             )
